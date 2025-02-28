@@ -1,8 +1,10 @@
+// AdminDashboard.js
 import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import EventCalendar from './EventCalender';
 import Announcement from './Announcement';
-import Performance from './Performance'; // ✅ Ensure this is imported
+import Performance from './Performance';
+import axios from 'axios';
 import {
   AdminDashboardContainer,
   Content,
@@ -12,15 +14,53 @@ import {
   SectionTitle,
   CardContainer,
   Card,
-  CardContent,
   CardTitle,
+  CardContent,
 } from '../../styles/DashboardStyles';
 
 const AdminDashboard = () => {
+  const [isOpen, setIsOpen] = useState(true);
+  const [events, setEvents] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [studentPerformance, setStudentPerformance] = useState([]);
+
+  useEffect(() => {
+    fetchEvents();
+    fetchAnnouncements();
+    fetchStudentPerformance();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/v1/events/getall');
+      setEvents(response.data.events || []);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
+
+  const fetchAnnouncements = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/v1/announcements/getall');
+      setAnnouncements(response.data.announcements || []);
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+    }
+  };
+
+  const fetchStudentPerformance = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/v1/performance/getall');
+      setStudentPerformance(response.data.performance || []);
+    } catch (error) {
+      console.error('Error fetching student performance:', error);
+    }
+  };
+
   return (
     <AdminDashboardContainer>
-      <Sidebar/>
-      <Content>
+      <Sidebar />
+      <Content isOpen={isOpen}>
         <TopContent>
           <Section>
             <SectionTitle>Overview</SectionTitle>
@@ -39,15 +79,15 @@ const AdminDashboard = () => {
               </Card>
             </CardContainer>
           </Section>
-          
+
           <Section>
-              <SectionTitle>All Events</SectionTitle>
+            <EventCalendar events={events} />
           </Section>
         </TopContent>
 
         <BottomContent>
-          <Performance/>
-          <Announcement/>
+          <Performance studentPerformance={studentPerformance} />
+          <Announcement announcements={announcements} />
         </BottomContent>
       </Content>
     </AdminDashboardContainer>
