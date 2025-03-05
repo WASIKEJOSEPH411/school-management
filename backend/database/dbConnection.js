@@ -6,7 +6,7 @@ dotenv.config(); // Load environment variables
 export const dbConnection = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: "SCHOOL_MANAGEMENT_SYSTEM", // ✅ No spaces in DB name
+      dbName: "school_management_system", // ✅ No spaces in DB name
     });
 
     console.log("✅ Database connected successfully!");

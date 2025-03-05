@@ -1,4 +1,3 @@
-// Library.js
 import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import axios from 'axios';
@@ -20,6 +19,7 @@ import {
 
 const Library = () => {
   const [books, setBooks] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchBooks();
@@ -29,29 +29,45 @@ const Library = () => {
     try {
       const response = await axios.get('http://localhost:4000/api/v1/library/getall');
       setBooks(response.data.books);
+      setError(null); // Clear any previous errors
     } catch (error) {
       console.error('Error fetching books:', error);
+      setBooks([]); // Ensure books state does not remain undefined
+      setError('Failed to fetch books. Please try again.');
     }
   };
 
   const addBook = async (book) => {
     try {
-      const response = await axios.post('http://localhost:4000/api/v1/library', {
+      await axios.post('http://localhost:4000/api/v1/library', {
         bookname: book.title,
         author: book.author,
       });
-      setBooks([...books, response.data]);
+      fetchBooks(); // Re-fetch books after adding
     } catch (error) {
       console.error('Error adding book:', error);
+      setError('Failed to add book. Please try again.');
     }
   };
 
   const handleBookPick = async (bookId, studentId) => {
-    // Implement logic to record when a student picks a book
+    try {
+      await axios.post(`http://localhost:4000/api/v1/library/pick/${bookId}`, { studentId });
+      fetchBooks();
+    } catch (error) {
+      console.error('Error picking book:', error);
+      setError('Failed to pick the book. Please try again.');
+    }
   };
 
   const handleBookReturn = async (bookId, studentId) => {
-    // Implement logic to mark when a student returns a book
+    try {
+      await axios.post(`http://localhost:4000/api/v1/library/return/${bookId}`, { studentId });
+      fetchBooks();
+    } catch (error) {
+      console.error('Error returning book:', error);
+      setError('Failed to return the book. Please try again.');
+    }
   };
 
   return (
@@ -59,11 +75,13 @@ const Library = () => {
       <Sidebar />
       <Content>
         <Title>Library Management</Title>
+
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+
         <AddBookForm
           onSubmit={(e) => {
             e.preventDefault();
             const book = {
-              id: Math.random().toString(36).substr(2, 9),
               title: e.target.title.value,
               author: e.target.author.value,
             };
@@ -84,16 +102,20 @@ const Library = () => {
         </AddBookForm>
 
         <h2>Books</h2>
-        <BookList>
-          {books.map((book) => (
-            <BookItem key={book._id}>
-              <BookTitle>{book.bookname}</BookTitle>
-              <BookAuthor>by {book.author}</BookAuthor>
-              <ActionButton onClick={() => handleBookPick(book._id, 'student123')}>Pick</ActionButton>
-              <ActionButton onClick={() => handleBookReturn(book._id, 'student123')}>Return</ActionButton>
-            </BookItem>
-          ))}
-        </BookList>
+        {books.length > 0 ? (
+          <BookList>
+            {books.map((book) => (
+              <BookItem key={book._id}>
+                <BookTitle>{book.bookname}</BookTitle>
+                <BookAuthor>by {book.author}</BookAuthor>
+                <ActionButton onClick={() => handleBookPick(book._id, 'student123')}>Pick</ActionButton>
+                <ActionButton onClick={() => handleBookReturn(book._id, 'student123')}>Return</ActionButton>
+              </BookItem>
+            ))}
+          </BookList>
+        ) : (
+          <p>No books available</p>
+        )}
       </Content>
     </LibraryContainer>
   );

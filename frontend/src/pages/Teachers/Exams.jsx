@@ -12,7 +12,35 @@ const CheckExamSection = () => {
   const [className, setClassName] = useState('');
   const [marks, setMarks] = useState('');
 
-    const calculateTotalMarks = () => {
+  useEffect(() => {
+    fetchExams(); // Fetch exams on component mount
+  }, []);
+
+  const fetchExams = async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/v1/exam');
+      setExamData(response.data);
+    } catch (error) {
+      console.error('Error fetching exams:', error);
+    }
+  };
+
+  const handleAddExam = async (e) => {
+    e.preventDefault();
+    const newExam = { name, registrationNumber, className, marks: parseInt(marks) };
+    try {
+      const response = await axios.post('http://localhost:4000/api/v1/exam', newExam);
+      setExamData([...examData, response.data]);
+      setName('');
+      setRegistrationNumber('');
+      setClassName('');
+      setMarks('');
+    } catch (error) {
+      console.error('Error adding exam:', error);
+    }
+  };
+
+  const calculateTotalMarks = () => {
     let total = 0;
     for (let i = 0; i < examData.length; i++) {
       total += examData[i].marks;
@@ -27,7 +55,7 @@ const CheckExamSection = () => {
       </SidebarContainer>
       <Content>
         <ExamHeader>Exam Details</ExamHeader>
-        <ExamForm >
+        <ExamForm onSubmit={handleAddExam}>
           <FormLabel>Name:</FormLabel>
           <FormInput
             type="text"
